@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Githubpy : A simple GitHub v3 API SDK for Python" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Githubpy</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/michaelliao/githubpy">View on GitHub</a>
+
+          <h1 id="project_title">Githubpy</h1>
+          <h2 id="project_tagline">A simple GitHub v3 API SDK for Python</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/michaelliao/githubpy/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/michaelliao/githubpy/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>githubpy</h1>
+
+<h3>Welcome</h3>
+
+<p>githubpy is a simple Python SDK for GitHub API v3. It is a small single-file and easy-to-use.</p>
+
+<p>Sample code:</p>
+
+<pre><code>&gt;&gt;&gt; gh = GitHub()
+&gt;&gt;&gt; gh.users('michaelliao').get()
+{'public_repos': 11, 'name': u'Michael Liao', ... }
+</code></pre>
+
+<p>Requirement:</p>
+
+<p>Python 2.5 (with simplejson), 2.6, 2.7</p>
+
+<h3>Call APIs</h3>
+
+<p>All APIs are dynamic calls. You can construct API call by GitHub's API doc.</p>
+
+<p>For example, according to GitHub API doc of how to <a href="http://developer.github.com/v3/users/#get-a-single-user">get a single user</a>:</p>
+
+<pre><code>GET /users/:user
+</code></pre>
+
+<p>There is a variable :user, so we can make a call in Python like this:</p>
+
+<pre><code>&gt;&gt;&gt; gh.users('michaelliao').get()
+{'public_repos': 11, 'name': u'Michael Liao', ...}
+</code></pre>
+
+<p>Returns dict but also can be treated as object:</p>
+
+<pre><code>&gt;&gt;&gt; u['name']
+u'Michael Liao'
+&gt;&gt;&gt; u.name
+u'Michael Liao'
+</code></pre>
+
+<p>Another example of how to <a href="http://developer.github.com/v3/issues/#list-issues-for-a-repository">list issues for a repository</a>:</p>
+
+<pre><code>GET /repos/:owner/:repo/issues
+Parameters
+  milestone
+    Integer Milestone number
+    none for Issues with no Milestone.
+    * for Issues with any Milestone.
+  state
+    open, closed, default: open
+  assignee
+    String User login
+    none for Issues with no assigned User.
+    * for Issues with any assigned User.
+  ...
+</code></pre>
+
+<p>Passing keyword arguments in Python code for getting 'open' issues which assigned to 'michaelliao':</p>
+
+<pre><code>&gt;&gt;&gt; gh.repos('michaelliao')('githubpy').issues \
+      .get(state='open', assignee='michaelliao')
+</code></pre>
+
+<h3>Using POST, PUT, PATCH and DELETE</h3>
+
+<p><a href="http://developer.github.com/v3/issues/#create-an-issue">Create an issue</a>:</p>
+
+<pre><code>POST /repos/:owner/:repo/issues
+Input
+  title
+    Required string
+  body
+    Optional string
+  assignee
+    Optional string - Login for the user that this issue should be assigned to.
+  ...
+</code></pre>
+
+<p>Python code to create an issue:</p>
+
+<pre><code>&gt;&gt;&gt; gh.repos('michaelliao')('githubpy').issues \
+      .post(title='sample issue', body='found a bug')
+</code></pre>
+
+<p>Remember all APIs are dynamic calls so you don't need update this SDK if GitHub add new APIs.</p>
+
+<h3>Authentication</h3>
+
+<p>Anonymous API call:</p>
+
+<pre><code>&gt;&gt;&gt; gh = GitHub()
+</code></pre>
+
+<p>Basic authentication using username and password:</p>
+
+<pre><code>&gt;&gt;&gt; gh = GitHub(username='loginname', password='your-password')
+</code></pre>
+
+<p>OAuth authentication is a bit complicated:</p>
+
+<p>Step 1: redirect user to the generated URL:</p>
+
+<pre><code>&gt;&gt;&gt; gh = GitHub(client_id='1234', client_secret='secret')
+&gt;&gt;&gt; print gh.authorize_url(state='a-random-string')
+'https://github.com/login/oauth/authorize?client_id=1234'
+</code></pre>
+
+<p>Step 2: GitHub redirects back to your site with parameter 'code' and 'state' (optional). Then get an access token:</p>
+
+<pre><code>&gt;&gt;&gt; code = request.input('code')
+&gt;&gt;&gt; state = request.input('state')
+&gt;&gt;&gt; print gh.get_access_token(code, state)
+'abc1234567xyz'
+</code></pre>
+
+<p>Step 3: Using access token as authentication to call APIs:</p>
+
+<pre><code>&gt;&gt;&gt; gh = GitHub(access_token='abc1234567xyz')
+</code></pre>
+
+<h3>Errors</h3>
+
+<p>ApiError raises if something wrong. There are 2 sub-classes ApiAuthError and ApiNotFoundError.</p>
+
+<pre><code>try:
+    gh.user('user-not-exist').get()
+except ApiNotFoundError, e:
+    print e, e.request, e.response
+</code></pre>
+
+<p>NOTE: You may get ApiNotFoundError (404 Not Found) even if the URL is correct but authentication fail. According to GitHub's doc:</p>
+
+<pre><code>Requests that require authentication will return 404, instead of 403, 
+in some places. This is to prevent the accidental leakage of private 
+repositories to unauthorized users.
+</code></pre>
+
+<h3>Rate Limiting</h3>
+
+<p>You can find rate limiting after API call:</p>
+
+<pre><code>&gt;&gt;&gt; u = gh.user('michaelliao').get()
+&gt;&gt;&gt; gh.x_ratelimit_limit
+5000
+&gt;&gt;&gt; gh.x_ratelimit_remaining
+4999
+</code></pre>
+
+<h3>Enjoy!</h3>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Githubpy maintained by <a href="https://github.com/michaelliao">michaelliao</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
