@@ -34,7 +34,7 @@ There is a variable :user, so we can make a call in Python like this:
 {'public_repos': 11, 'name': u'Michael Liao', ...}
 ```
 
-Returns dict object but also treat as object:
+Returns dict but also can be treated as object:
 
 ```
 >>> u['name']
@@ -61,7 +61,7 @@ Parameters
   ...
 ```
 
-Python code for get 'open' issues which assigned to 'michaelliao':
+Passing keyword arguments in Python code for getting 'open' issues which assigned to 'michaelliao':
 
 ```
 >>> gh.repos('michaelliao')('githubpy').issues.get(state='open', assignee='michaelliao')
@@ -88,6 +88,8 @@ Python code to create an issue:
 ```
 >>> gh.repos('michaelliao')('githubpy').issues.post(title='sample issue', body='found a bug')
 ```
+
+Remember all APIs are dynamic calls so you don't need update this SDK if GitHub add new APIs.
 
 ### Authentication
 
