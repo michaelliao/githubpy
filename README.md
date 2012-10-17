@@ -138,7 +138,7 @@ ApiError raises if something wrong. There are 2 sub-classes ApiAuthError and Api
 
 ```
 try:
-    gh.user('user-not-exist').get()
+    gh.user.emails.delete('email@example.com')
 except ApiNotFoundError, e:
     print e, e.request, e.response
 ```
@@ -156,7 +156,7 @@ repositories to unauthorized users.
 You can find rate limiting after API call:
 
 ```
->>> u = gh.user('michaelliao').get()
+>>> u = gh.users('michaelliao').get()
 >>> gh.x_ratelimit_limit
 5000
 >>> gh.x_ratelimit_remaining
