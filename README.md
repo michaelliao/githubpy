@@ -3,14 +3,14 @@ githubpy
 
 ### Welcome
 
-githubpy is a simple Python SDK for GitHub API v3. It is small, single-file and easy-to-use.
+githubpy is a simple Python SDK for GitHub API v3. It is a small single-file and easy-to-use.
 
 Sample code:
 
 ```
 >>> gh = GitHub()
 >>> gh.users('michaelliao').get()
-{'public_repos': 11, 'public_gists': 0, 'name': u'Michael Liao', ... }
+{'public_repos': 11, 'name': u'Michael Liao', ... }
 ```
 
 ### Call APIs
@@ -122,6 +122,23 @@ Step 3: Using access token as authentication to call APIs:
 >>> gh = GitHub(access_token='abc1234567xyz')
 ```
 
+### Errors
+
+ApiError raises if something wrong. There are 2 sub-classes ApiAuthError and ApiNotFoundError.
+
+```
+try:
+    gh.user('user-not-exist').get()
+except ApiNotFoundError, e:
+    print e, e.request, e.response
+```
+
+NOTE: You may get ApiNotFoundError (404 Not Found) even if the URL is correct but authentication fail. According to GitHub's doc:
+
+```
+Requests that require authentication will return 404, instead of 403, in some places. This is to prevent the accidental leakage of private repositories to unauthorized users.
+```
+
 ### Rate Limiting
 
 You can find rate limiting after API call:
@@ -132,5 +149,6 @@ You can find rate limiting after API call:
 5000
 >>> gh.x_ratelimit_remaining
 4999
+```
 
 ### Enjoy!
