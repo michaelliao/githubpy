@@ -64,7 +64,8 @@ Parameters
 Passing keyword arguments in Python code for getting 'open' issues which assigned to 'michaelliao':
 
 ```
->>> gh.repos('michaelliao')('githubpy').issues.get(state='open', assignee='michaelliao')
+>>> gh.repos('michaelliao')('githubpy').issues
+      .get(state='open', assignee='michaelliao')
 ```
 
 ### Using POST, PUT, PATCH and DELETE
@@ -86,7 +87,8 @@ Input
 Python code to create an issue:
 
 ```
->>> gh.repos('michaelliao')('githubpy').issues.post(title='sample issue', body='found a bug')
+>>> gh.repos('michaelliao')('githubpy').issues
+      .post(title='sample issue', body='found a bug')
 ```
 
 Remember all APIs are dynamic calls so you don't need update this SDK if GitHub add new APIs.
@@ -110,9 +112,9 @@ OAuth authentication is a bit complicated:
 Step 1: redirect user to the generated URL:
 
 ```
->>> gh = GitHub(client_id='your-client-id', client_secret='your-client-secret', redirect_uri=None, scope=None)
+>>> gh = GitHub(client_id='1234', client_secret='secret')
 >>> print gh.authorize_url(state='a-random-string')
-'https://github.com/login/oauth/authorize?client_id=12345678'
+'https://github.com/login/oauth/authorize?client_id=1234'
 ```
 
 Step 2: GitHub redirects back to your site with parameter 'code' and 'state' (optional). Then get an access token:
@@ -144,8 +146,9 @@ except ApiNotFoundError, e:
 NOTE: You may get ApiNotFoundError (404 Not Found) even if the URL is correct but authentication fail. According to GitHub's doc:
 
 ```
-Requests that require authentication will return 404, instead of 403, in some places.
-This is to prevent the accidental leakage of private repositories to unauthorized users.
+Requests that require authentication will return 404, instead of 403, 
+in some places. This is to prevent the accidental leakage of private 
+repositories to unauthorized users.
 ```
 
 ### Rate Limiting
