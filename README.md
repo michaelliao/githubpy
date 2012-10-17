@@ -64,7 +64,7 @@ Parameters
 Passing keyword arguments in Python code for getting 'open' issues which assigned to 'michaelliao':
 
 ```
->>> gh.repos('michaelliao')('githubpy').issues
+>>> gh.repos('michaelliao')('githubpy').issues \
       .get(state='open', assignee='michaelliao')
 ```
 
@@ -87,7 +87,7 @@ Input
 Python code to create an issue:
 
 ```
->>> gh.repos('michaelliao')('githubpy').issues
+>>> gh.repos('michaelliao')('githubpy').issues \
       .post(title='sample issue', body='found a bug')
 ```
 

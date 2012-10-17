@@ -2,7 +2,7 @@
 # -*-coding: utf8 -*-
 
 '''
-GitHub API Python Client.
+GitHub API Python SDK. (Python >= 2.5)
 
 Michael Liao (askxuefeng@gmail.com)
 
@@ -50,6 +50,7 @@ try:
 except ImportError:
     import simplejson as json
 
+from collections import Iterable
 from datetime import datetime, timedelta, tzinfo
 from StringIO import StringIO
 
@@ -61,16 +62,69 @@ _METHOD_MAP = dict(
         PATCH=lambda: 'PATCH',
         DELETE=lambda: 'DELETE')
 
+DEFAULT_SCOPE = None
+RW_SCOPE = 'user,public_repo,repo,repo:status,gist'
+
 class GitHub(object):
 
     '''
     GitHub client.
     '''
 
-    def __init__(self, username=None, password=None):
+    def __init__(self, username=None, password=None, access_token=None, client_id=None, client_secret=None, redirect_uri=None, scope=None):
+        self.x_ratelimit_remaining = (-1)
+        self.x_ratelimit_limit = (-1)
         self._authorization = None
         if username and password:
             self._authorization = 'Basic %s' % base64.b64encode('%s:%s' % (username, password))
+        elif access_token:
+            self._authorization = 'token %s' % access_token
+        self._client_id = client_id
+        self._client_secret = client_secret
+        self._redirect_uri = redirect_uri
+        self._scope = scope
+
+    def authorize_url(self, state=None):
+        '''
+        Generate authorize_url.
+
+        >>> GitHub(client_id='3ebf94c5776d565bcf75').authorize_url()
+        'https://github.com/login/oauth/authorize?client_id=3ebf94c5776d565bcf75'
+        '''
+        if not self._client_id:
+            raise ApiAuthError('No client id.')
+        kw = dict(client_id=self._client_id)
+        if self._redirect_uri:
+            kw['redirect_uri'] = self._redirect_uri
+        if self._scope:
+            kw['scope'] = self._scope
+        if state:
+            kw['state'] = state
+        return 'https://github.com/login/oauth/authorize?%s' % _encode_params(kw)
+
+    def get_access_token(self, code, state=None):
+        '''
+        In callback url: http://host/callback?code=123&state=xyz
+
+        use code and state to get an access token.        
+        '''
+        kw = dict(client_id=self._client_id, client_secret=self._client_secret, code=code)
+        if self._redirect_uri:
+            kw['redirect_uri'] = self._redirect_uri
+        if state:
+            kw['state'] = state
+        opener = urllib2.build_opener(urllib2.HTTPSHandler)
+        request = urllib2.Request('https://github.com/login/oauth/access_token', data=_encode_params(kw))
+        request.get_method = _METHOD_MAP['POST']
+        request.add_header('Accept', 'application/json')
+        try:
+            response = opener.open(request)
+            r = _parse_json(response.read())
+            if 'error' in r:
+                raise ApiAuthError(str(r.error))
+            return str(r.access_token)
+        except urllib2.HTTPError, e:
+            raise ApiAuthError('HTTPError when get access token')
 
     def __getattr__(self, attr):
         return _Callable(self, '/%s' % attr)
@@ -79,7 +133,7 @@ class GitHub(object):
         data = None
         params = None
         if method=='GET' and kw:
-            path = '%s?%s' % (path, _encode_params(**kw))
+            path = '%s?%s' % (path, _encode_params(kw))
         if method=='POST':
             data = _encode_json(kw)
         url = '%s%s' % (_URL, path)
@@ -162,7 +216,7 @@ class _Callable(object):
 
     __repr__ = __str__
 
-def _encode_params(**kw):
+def _encode_params(kw):
     '''
     Encode parameters.
     '''
@@ -200,6 +254,11 @@ class ApiError(BaseException):
         super(ApiError, self).__init__(url)
         self.request = request
         self.response = response
+
+class ApiAuthError(ApiError):
+
+    def __init__(self, msg):
+        super(ApiAuthError, self).__init__(msg, None, None)
 
 class ApiNotFoundError(ApiError):
     pass
