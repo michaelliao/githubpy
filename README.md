@@ -13,15 +13,21 @@ Sample code:
 {'public_repos': 11, 'name': u'Michael Liao', ... }
 ```
 
+Requirement:
+
+Python 2.5 (with simplejson), 2.6, 2.7
+
 ### Call APIs
 
-According to GitHub API doc of how to [get a single user](http://developer.github.com/v3/users/#get-a-single-user):
+All APIs are dynamic calls. You can construct API call by GitHub's API doc.
+
+For example, according to GitHub API doc of how to [get a single user](http://developer.github.com/v3/users/#get-a-single-user):
 
 ```
 GET /users/:user
 ```
 
-Python code:
+There is a variable :user, so we can make a call in Python like this:
 
 ```
 >>> gh.users('michaelliao').get()
@@ -136,7 +142,8 @@ except ApiNotFoundError, e:
 NOTE: You may get ApiNotFoundError (404 Not Found) even if the URL is correct but authentication fail. According to GitHub's doc:
 
 ```
-Requests that require authentication will return 404, instead of 403, in some places. This is to prevent the accidental leakage of private repositories to unauthorized users.
+Requests that require authentication will return 404, instead of 403, in some places.
+This is to prevent the accidental leakage of private repositories to unauthorized users.
 ```
 
 ### Rate Limiting
