@@ -156,7 +156,7 @@ Input
 <p>ApiError raises if something wrong. There are 2 sub-classes ApiAuthError and ApiNotFoundError.</p>
 
 <pre><code>try:
-    gh.user('user-not-exist').get()
+    gh.user.emails.delete('email@example.com')
 except ApiNotFoundError, e:
     print e, e.request, e.response
 </code></pre>
@@ -172,12 +172,16 @@ repositories to unauthorized users.
 
 <p>You can find rate limiting after API call:</p>
 
-<pre><code>&gt;&gt;&gt; u = gh.user('michaelliao').get()
+<pre><code>&gt;&gt;&gt; u = gh.users('michaelliao').get()
 &gt;&gt;&gt; gh.x_ratelimit_limit
 5000
 &gt;&gt;&gt; gh.x_ratelimit_remaining
 4999
 </code></pre>
+
+<h3>Licensing</h3>
+
+<p>githubpy is distributed under <a href="http://www.apache.org/licenses/LICENSE-2.0.txt">Apache License 2.0</a>. See LICENSE file.</p>
 
 <h3>Enjoy!</h3>
       </section>
