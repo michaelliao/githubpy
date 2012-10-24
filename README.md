@@ -163,4 +163,8 @@ You can find rate limiting after API call:
 4999
 ```
 
+### Licensing
+
+githubpy is distributed under [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt). See LICENSE file.
+
 ### Enjoy!
