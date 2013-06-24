@@ -4,6 +4,8 @@
 '''
 GitHub API Python SDK. (Python >= 2.5)
 
+Apache License
+
 Michael Liao (askxuefeng@gmail.com)
 
 Usage:
@@ -54,6 +56,8 @@ from collections import Iterable
 from datetime import datetime, timedelta, tzinfo
 from StringIO import StringIO
 TIMEOUT=60
+
+__version__ = '1.0.0'
 
 _URL = 'https://api.github.com'
 _METHOD_MAP = dict(
