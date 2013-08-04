@@ -19,7 +19,7 @@ u'michaelliao'
 >>> x_ratelimit_remaining = gh.x_ratelimit_remaining
 >>> x_ratelimit_limit = gh.x_ratelimit_limit
 >>> L = gh.users('githubpy').following.get()
->>> L[0]._links.self.href
+>>> L[0].url
 u'https://api.github.com/users/michaelliao'
 >>> L = gh.repos('githubpy')('testgithubpy').issues.get(state='closed', sort='created')
 >>> L[0].title
@@ -255,7 +255,7 @@ def _parse_json(jsonstr):
         return o
     return json.loads(jsonstr, object_hook=_obj_hook)
 
-class ApiError(BaseException):
+class ApiError(Exception):
 
     def __init__(self, url, request, response):
         super(ApiError, self).__init__(url)
