@@ -5,6 +5,8 @@ githubpy
 
 githubpy is a simple Python SDK for GitHub API v3. It is a small single-file and easy-to-use.
 
+It runs on Python 2 (2.6 and above) and Python3 (3.3 and above).
+
 Sample code:
 
 ```
@@ -15,7 +17,7 @@ Sample code:
 
 Requirement:
 
-Python 2.5 (with simplejson), 2.6, 2.7
+Python 2.6, 2.7, 3.3, 3.4
 
 ### Call APIs
 
