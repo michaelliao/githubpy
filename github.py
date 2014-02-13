@@ -18,6 +18,7 @@ Usage:
 True
 >>> x_ratelimit_remaining = gh.x_ratelimit_remaining
 >>> x_ratelimit_limit = gh.x_ratelimit_limit
+>>> x_ratelimit_reset = gh.x_ratelimit_reset
 >>> L = gh.users('githubpy').following.get()
 >>> L[0].url == u'https://api.github.com/users/michaelliao'
 True
@@ -87,6 +88,7 @@ class GitHub(object):
     def __init__(self, username=None, password=None, access_token=None, client_id=None, client_secret=None, redirect_uri=None, scope=None):
         self.x_ratelimit_remaining = (-1)
         self.x_ratelimit_limit = (-1)
+        self.x_ratelimit_reset = (-1)
         self._authorization = None
         if username and password:
             # roundabout hack for Python 3
@@ -184,6 +186,8 @@ class GitHub(object):
                     self.x_ratelimit_remaining = int(headers[k])
                 elif h=='x-ratelimit-limit':
                     self.x_ratelimit_limit = int(headers[k])
+                elif h=='x-ratelimit-reset':
+                    self.x_ratelimit_reset = int(headers[k])
                 elif h=='content-type':
                     is_json = headers[k].startswith('application/json')
         return is_json
