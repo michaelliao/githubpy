@@ -1,3 +1,9 @@
 Version 1.0.0 released 2013-06-24
 
 * Initial release.
+
+Version 1.1.0 released 2014-02-13
+
+* Add py3 support;
+* Add x_ratelimit_reset;
+* Fix JsonObject class.

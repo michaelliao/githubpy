@@ -66,7 +66,7 @@ from datetime import datetime, timedelta, tzinfo
 
 TIMEOUT=60
 
-__version__ = '1.0.0'
+__version__ = '1.1.0'
 
 _URL = 'https://api.github.com'
 _METHOD_MAP = dict(
@@ -293,17 +293,14 @@ class JsonObject(dict):
     '''
     general json object that can bind any fields but also act as a dict.
     '''
-    def __getattr__(self, attr):
-        return self[attr]
+    def __getattr__(self, key):
+        try:
+            return self[key]
+        except KeyError:
+            raise AttributeError(r"'Dict' object has no attribute '%s'" % key)
 
     def __setattr__(self, attr, value):
         self[attr] = value
-
-    def __getstate__(self):
-        return self.copy()
-
-    def __setstate__(self, state):
-        self.update(state)
 
 if __name__ == '__main__':
     import doctest
