@@ -2,7 +2,7 @@
 # -*-coding: utf8 -*-
 
 '''
-GitHub API Python SDK. (Python >= 2.5)
+GitHub API Python SDK. (Python >= 2.6)
 
 Apache License
 
