@@ -273,6 +273,19 @@ class GitHub(object):
                     is_json = headers[k].startswith('application/json')
         return is_json
 
+class JsonObject(dict):
+    '''
+    general json object that can bind any fields but also act as a dict.
+    '''
+    def __getattr__(self, key):
+        try:
+            return self[key]
+        except KeyError:
+            raise AttributeError(r"'Dict' object has no attribute '%s'" % key)
+
+    def __setattr__(self, attr, value):
+        self[attr] = value
+
 class ApiError(Exception):
 
     def __init__(self, url, request, response):
@@ -287,19 +300,6 @@ class ApiAuthError(ApiError):
 
 class ApiNotFoundError(ApiError):
     pass
-
-class JsonObject(dict):
-    '''
-    general json object that can bind any fields but also act as a dict.
-    '''
-    def __getattr__(self, key):
-        try:
-            return self[key]
-        except KeyError:
-            raise AttributeError(r"'Dict' object has no attribute '%s'" % key)
-
-    def __setattr__(self, attr, value):
-        self[attr] = value
 
 if __name__ == '__main__':
     import doctest
