@@ -114,6 +114,7 @@ def _parse_json(jsonstr):
         return o
     return json.loads(jsonstr, object_hook=_obj_hook)
 
+
 class _Executable(object):
 
     def __init__(self, gh, method, path):
@@ -128,6 +129,7 @@ class _Executable(object):
         return '_Executable (%s %s)' % (self._method, self._path)
 
     __repr__ = __str__
+
 
 class _Callable(object):
 
@@ -159,6 +161,7 @@ class _Callable(object):
         return '_Callable (%s)' % self._name
 
     __repr__ = __str__
+
 
 class GitHub(object):
 
@@ -273,6 +276,7 @@ class GitHub(object):
                     is_json = headers[k].startswith('application/json')
         return is_json
 
+
 class JsonObject(dict):
     '''
     general json object that can bind any fields but also act as a dict.
@@ -286,6 +290,7 @@ class JsonObject(dict):
     def __setattr__(self, attr, value):
         self[attr] = value
 
+
 class ApiError(Exception):
 
     def __init__(self, url, request, response):
@@ -293,13 +298,17 @@ class ApiError(Exception):
         self.request = request
         self.response = response
 
+
 class ApiAuthError(ApiError):
 
     def __init__(self, msg):
         super(ApiAuthError, self).__init__(msg, None, None)
 
+
 class ApiNotFoundError(ApiError):
     pass
+
+
 
 if __name__ == '__main__':
     import doctest
