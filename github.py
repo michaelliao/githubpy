@@ -78,6 +78,42 @@ _METHOD_MAP = dict(
 DEFAULT_SCOPE = None
 RW_SCOPE = 'user,public_repo,repo,repo:status,gist'
 
+def _encode_params(kw):
+    '''
+    Encode parameters.
+    '''
+    args = []
+    for k, v in kw.items():
+        try:
+            # Python 2
+            qv = v.encode('utf-8') if isinstance(v, unicode) else str(v)
+        except:
+            qv = v
+        args.append('%s=%s' % (k, urlquote(qv)))
+    return '&'.join(args)
+
+def _encode_json(obj):
+    '''
+    Encode object as json str.
+    '''
+    def _dump_obj(obj):
+        if isinstance(obj, dict):
+            return obj
+        d = dict()
+        for k in dir(obj):
+            if not k.startswith('_'):
+                d[k] = getattr(obj, k)
+        return d
+    return json.dumps(obj, default=_dump_obj)
+
+def _parse_json(jsonstr):
+    def _obj_hook(pairs):
+        o = JsonObject()
+        for k, v in pairs.items():
+            o[str(k)] = v
+        return o
+    return json.loads(jsonstr, object_hook=_obj_hook)
+
 class GitHub(object):
 
     '''
@@ -236,42 +272,6 @@ class _Callable(object):
         return '_Callable (%s)' % self._name
 
     __repr__ = __str__
-
-def _encode_params(kw):
-    '''
-    Encode parameters.
-    '''
-    args = []
-    for k, v in kw.items():
-        try:
-            # Python 2
-            qv = v.encode('utf-8') if isinstance(v, unicode) else str(v)
-        except:
-            qv = v
-        args.append('%s=%s' % (k, urlquote(qv)))
-    return '&'.join(args)
-
-def _encode_json(obj):
-    '''
-    Encode object as json str.
-    '''
-    def _dump_obj(obj):
-        if isinstance(obj, dict):
-            return obj
-        d = dict()
-        for k in dir(obj):
-            if not k.startswith('_'):
-                d[k] = getattr(obj, k)
-        return d
-    return json.dumps(obj, default=_dump_obj)
-
-def _parse_json(jsonstr):
-    def _obj_hook(pairs):
-        o = JsonObject()
-        for k, v in pairs.items():
-            o[str(k)] = v
-        return o
-    return json.loads(jsonstr, object_hook=_obj_hook)
 
 class ApiError(Exception):
 
