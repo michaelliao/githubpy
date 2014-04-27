@@ -114,6 +114,52 @@ def _parse_json(jsonstr):
         return o
     return json.loads(jsonstr, object_hook=_obj_hook)
 
+class _Executable(object):
+
+    def __init__(self, gh, method, path):
+        self._gh = gh
+        self._method = method
+        self._path = path
+
+    def __call__(self, **kw):
+        return self._gh._http(self._method, self._path, **kw)
+
+    def __str__(self):
+        return '_Executable (%s %s)' % (self._method, self._path)
+
+    __repr__ = __str__
+
+class _Callable(object):
+
+    def __init__(self, gh, name):
+        self._gh = gh
+        self._name = name
+
+    def __call__(self, *args):
+        if len(args)==0:
+            return self
+        name = '%s/%s' % (self._name, '/'.join([str(arg) for arg in args]))
+        return _Callable(self._gh, name)
+
+    def __getattr__(self, attr):
+        if attr=='get':
+            return _Executable(self._gh, 'GET', self._name)
+        if attr=='put':
+            return _Executable(self._gh, 'PUT', self._name)
+        if attr=='post':
+            return _Executable(self._gh, 'POST', self._name)
+        if attr=='patch':
+            return _Executable(self._gh, 'PATCH', self._name)
+        if attr=='delete':
+            return _Executable(self._gh, 'DELETE', self._name)
+        name = '%s/%s' % (self._name, attr)
+        return _Callable(self._gh, name)
+
+    def __str__(self):
+        return '_Callable (%s)' % self._name
+
+    __repr__ = __str__
+
 class GitHub(object):
 
     '''
@@ -226,52 +272,6 @@ class GitHub(object):
                 elif h=='content-type':
                     is_json = headers[k].startswith('application/json')
         return is_json
-
-class _Executable(object):
-
-    def __init__(self, gh, method, path):
-        self._gh = gh
-        self._method = method
-        self._path = path
-
-    def __call__(self, **kw):
-        return self._gh._http(self._method, self._path, **kw)
-
-    def __str__(self):
-        return '_Executable (%s %s)' % (self._method, self._path)
-
-    __repr__ = __str__
-
-class _Callable(object):
-
-    def __init__(self, gh, name):
-        self._gh = gh
-        self._name = name
-
-    def __call__(self, *args):
-        if len(args)==0:
-            return self
-        name = '%s/%s' % (self._name, '/'.join([str(arg) for arg in args]))
-        return _Callable(self._gh, name)
-
-    def __getattr__(self, attr):
-        if attr=='get':
-            return _Executable(self._gh, 'GET', self._name)
-        if attr=='put':
-            return _Executable(self._gh, 'PUT', self._name)
-        if attr=='post':
-            return _Executable(self._gh, 'POST', self._name)
-        if attr=='patch':
-            return _Executable(self._gh, 'PATCH', self._name)
-        if attr=='delete':
-            return _Executable(self._gh, 'DELETE', self._name)
-        name = '%s/%s' % (self._name, attr)
-        return _Callable(self._gh, name)
-
-    def __str__(self):
-        return '_Callable (%s)' % self._name
-
-    __repr__ = __str__
 
 class ApiError(Exception):
 
