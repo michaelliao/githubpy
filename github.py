@@ -46,6 +46,8 @@ Traceback (most recent call last):
 ApiNotFoundError: https://api.github.com/users/github-not-exist-user/followers
 '''
 
+__version__ = '1.1.0'
+
 import re, os, time, hmac, base64, hashlib, urllib, mimetypes, json
 
 try:
@@ -65,8 +67,6 @@ from collections import Iterable
 from datetime import datetime, timedelta, tzinfo
 
 TIMEOUT=60
-
-__version__ = '1.1.0'
 
 _URL = 'https://api.github.com'
 _METHOD_MAP = dict(
