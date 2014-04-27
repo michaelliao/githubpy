@@ -48,8 +48,6 @@ ApiNotFoundError: https://api.github.com/users/github-not-exist-user/followers
 
 __version__ = '1.1.0'
 
-import re, os, time, hmac, base64, hashlib, urllib, mimetypes, json
-
 try:
     # Python 2
     from urllib2 import build_opener, HTTPSHandler, Request, HTTPError
@@ -63,6 +61,7 @@ except:
     from urllib.parse import quote as urlquote
     from io import StringIO
 
+import re, os, time, hmac, base64, hashlib, urllib, mimetypes, json
 from collections import Iterable
 from datetime import datetime, timedelta, tzinfo
 
