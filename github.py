@@ -89,7 +89,7 @@ def _encode_params(kw):
             qv = v.encode('utf-8') if isinstance(v, unicode) else str(v)
         except:
             qv = v
-        args.append('%s=%s' % (k, urlquote(qv)))
+        args.append('{0}={1}'.format(k, urlquote(qv)))
     return '&'.join(args)
 
 def _encode_json(obj):
@@ -126,7 +126,7 @@ class _Executable(object):
         return self._gh._http(self._method, self._path, **kw)
 
     def __str__(self):
-        return '_Executable (%s %s)' % (self._method, self._path)
+        return '_Executable ({0} {1})'.format(self._method, self._path)
 
     __repr__ = __str__
 
@@ -138,27 +138,27 @@ class _Callable(object):
         self._name = name
 
     def __call__(self, *args):
-        if len(args)==0:
+        if len(args) == 0:
             return self
-        name = '%s/%s' % (self._name, '/'.join([str(arg) for arg in args]))
+        name = '{0}/{1}'.format(self._name, '/'.join([str(arg) for arg in args]))
         return _Callable(self._gh, name)
 
     def __getattr__(self, attr):
-        if attr=='get':
+        if attr == 'get':
             return _Executable(self._gh, 'GET', self._name)
-        if attr=='put':
+        if attr == 'put':
             return _Executable(self._gh, 'PUT', self._name)
-        if attr=='post':
+        if attr == 'post':
             return _Executable(self._gh, 'POST', self._name)
-        if attr=='patch':
+        if attr == 'patch':
             return _Executable(self._gh, 'PATCH', self._name)
-        if attr=='delete':
+        if attr == 'delete':
             return _Executable(self._gh, 'DELETE', self._name)
-        name = '%s/%s' % (self._name, attr)
+        name = '{0}/{1}'.format(self._name, attr)
         return _Callable(self._gh, name)
 
     def __str__(self):
-        return '_Callable (%s)' % self._name
+        return '_Callable ({0})'.format(self._name)
 
     __repr__ = __str__
 
@@ -176,11 +176,11 @@ class GitHub(object):
         self._authorization = None
         if username and password:
             # roundabout hack for Python 3
-            userandpass = base64.b64encode(bytes('%s:%s' % (username, password), 'utf-8'))
+            userandpass = base64.b64encode(bytes('{0}:{1}'.format(username, password), 'utf-8'))
             userandpass = userandpass.decode('ascii')
-            self._authorization = 'Basic %s' % userandpass
+            self._authorization = 'Basic {0}'.format(userandpass)
         elif access_token:
-            self._authorization = 'token %s' % access_token
+            self._authorization = 'token {0}'.format(access_token)
         self._client_id = client_id
         self._client_secret = client_secret
         self._redirect_uri = redirect_uri
@@ -202,7 +202,7 @@ class GitHub(object):
             kw['scope'] = self._scope
         if state:
             kw['state'] = state
-        return 'https://github.com/login/oauth/authorize?%s' % _encode_params(kw)
+        return 'https://github.com/login/oauth/authorize?{0}'.format(_encode_params(kw))
 
     def get_access_token(self, code, state=None):
         '''
@@ -229,16 +229,16 @@ class GitHub(object):
             raise ApiAuthError('HTTPError when get access token')
 
     def __getattr__(self, attr):
-        return _Callable(self, '/%s' % attr)
+        return _Callable(self, '/{0}'.format(attr))
 
     def _http(self, method, path, **kw):
         data = None
         params = None
-        if method=='GET' and kw:
-            path = '%s?%s' % (path, _encode_params(kw))
+        if method == 'GET' and kw:
+            path = '{0}?{1}'.format(path, _encode_params(kw))
         if method in ['POST', 'PATCH', 'PUT']:
             data = bytes(_encode_json(kw), 'utf-8')
-        url = '%s%s' % (_URL, path)
+        url = '{0}{1}'.format(_URL, path)
         opener = build_opener(HTTPSHandler)
         request = Request(url, data=data)
         request.get_method = _METHOD_MAP[method]
@@ -257,7 +257,7 @@ class GitHub(object):
                 json = _parse_json(e.read().decode('utf-8'))
             req = JsonObject(method=method, url=url)
             resp = JsonObject(code=e.code, json=json)
-            if resp.code==404:
+            if resp.code == 404:
                 raise ApiNotFoundError(url, req, resp)
             raise ApiError(url, req, resp)
 
@@ -266,13 +266,13 @@ class GitHub(object):
         if headers:
             for k in headers:
                 h = k.lower()
-                if h=='x-ratelimit-remaining':
+                if h == 'x-ratelimit-remaining':
                     self.x_ratelimit_remaining = int(headers[k])
-                elif h=='x-ratelimit-limit':
+                elif h == 'x-ratelimit-limit':
                     self.x_ratelimit_limit = int(headers[k])
-                elif h=='x-ratelimit-reset':
+                elif h == 'x-ratelimit-reset':
                     self.x_ratelimit_reset = int(headers[k])
-                elif h=='content-type':
+                elif h == 'content-type':
                     is_json = headers[k].startswith('application/json')
         return is_json
 
@@ -285,7 +285,7 @@ class JsonObject(dict):
         try:
             return self[key]
         except KeyError:
-            raise AttributeError(r"'Dict' object has no attribute '%s'" % key)
+            raise AttributeError(r"'Dict' object has no attribute '{0}'".format(key))
 
     def __setattr__(self, attr, value):
         self[attr] = value
