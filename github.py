@@ -46,7 +46,7 @@ Traceback (most recent call last):
 ApiNotFoundError: https://api.github.com/users/github-not-exist-user/followers
 '''
 
-import re, os, time, hmac, base64, hashlib, urllib, mimetypes, json
+__version__ = '1.1.0'
 
 try:
     # Python 2
@@ -61,12 +61,11 @@ except:
     from urllib.parse import quote as urlquote
     from io import StringIO
 
+import re, os, time, hmac, base64, hashlib, urllib, mimetypes, json
 from collections import Iterable
 from datetime import datetime, timedelta, tzinfo
 
 TIMEOUT=60
-
-__version__ = '1.1.0'
 
 _URL = 'https://api.github.com'
 _METHOD_MAP = dict(
@@ -78,6 +77,91 @@ _METHOD_MAP = dict(
 
 DEFAULT_SCOPE = None
 RW_SCOPE = 'user,public_repo,repo,repo:status,gist'
+
+def _encode_params(kw):
+    '''
+    Encode parameters.
+    '''
+    args = []
+    for k, v in kw.items():
+        try:
+            # Python 2
+            qv = v.encode('utf-8') if isinstance(v, unicode) else str(v)
+        except:
+            qv = v
+        args.append('%s=%s' % (k, urlquote(qv)))
+    return '&'.join(args)
+
+def _encode_json(obj):
+    '''
+    Encode object as json str.
+    '''
+    def _dump_obj(obj):
+        if isinstance(obj, dict):
+            return obj
+        d = dict()
+        for k in dir(obj):
+            if not k.startswith('_'):
+                d[k] = getattr(obj, k)
+        return d
+    return json.dumps(obj, default=_dump_obj)
+
+def _parse_json(jsonstr):
+    def _obj_hook(pairs):
+        o = JsonObject()
+        for k, v in pairs.items():
+            o[str(k)] = v
+        return o
+    return json.loads(jsonstr, object_hook=_obj_hook)
+
+
+class _Executable(object):
+
+    def __init__(self, gh, method, path):
+        self._gh = gh
+        self._method = method
+        self._path = path
+
+    def __call__(self, **kw):
+        return self._gh._http(self._method, self._path, **kw)
+
+    def __str__(self):
+        return '_Executable (%s %s)' % (self._method, self._path)
+
+    __repr__ = __str__
+
+
+class _Callable(object):
+
+    def __init__(self, gh, name):
+        self._gh = gh
+        self._name = name
+
+    def __call__(self, *args):
+        if len(args)==0:
+            return self
+        name = '%s/%s' % (self._name, '/'.join([str(arg) for arg in args]))
+        return _Callable(self._gh, name)
+
+    def __getattr__(self, attr):
+        if attr=='get':
+            return _Executable(self._gh, 'GET', self._name)
+        if attr=='put':
+            return _Executable(self._gh, 'PUT', self._name)
+        if attr=='post':
+            return _Executable(self._gh, 'POST', self._name)
+        if attr=='patch':
+            return _Executable(self._gh, 'PATCH', self._name)
+        if attr=='delete':
+            return _Executable(self._gh, 'DELETE', self._name)
+        name = '%s/%s' % (self._name, attr)
+        return _Callable(self._gh, name)
+
+    def __str__(self):
+        return '_Callable (%s)' % self._name
+
+    __repr__ = __str__
+
 
 class GitHub(object):
 
@@ -192,102 +276,6 @@ class GitHub(object):
                     is_json = headers[k].startswith('application/json')
         return is_json
 
-class _Executable(object):
-
-    def __init__(self, gh, method, path):
-        self._gh = gh
-        self._method = method
-        self._path = path
-
-    def __call__(self, **kw):
-        return self._gh._http(self._method, self._path, **kw)
-
-    def __str__(self):
-        return '_Executable (%s %s)' % (self._method, self._path)
-
-    __repr__ = __str__
-
-class _Callable(object):
-
-    def __init__(self, gh, name):
-        self._gh = gh
-        self._name = name
-
-    def __call__(self, *args):
-        if len(args)==0:
-            return self
-        name = '%s/%s' % (self._name, '/'.join([str(arg) for arg in args]))
-        return _Callable(self._gh, name)
-
-    def __getattr__(self, attr):
-        if attr=='get':
-            return _Executable(self._gh, 'GET', self._name)
-        if attr=='put':
-            return _Executable(self._gh, 'PUT', self._name)
-        if attr=='post':
-            return _Executable(self._gh, 'POST', self._name)
-        if attr=='patch':
-            return _Executable(self._gh, 'PATCH', self._name)
-        if attr=='delete':
-            return _Executable(self._gh, 'DELETE', self._name)
-        name = '%s/%s' % (self._name, attr)
-        return _Callable(self._gh, name)
-
-    def __str__(self):
-        return '_Callable (%s)' % self._name
-
-    __repr__ = __str__
-
-def _encode_params(kw):
-    '''
-    Encode parameters.
-    '''
-    args = []
-    for k, v in kw.items():
-        try:
-            # Python 2
-            qv = v.encode('utf-8') if isinstance(v, unicode) else str(v)
-        except:
-            qv = v
-        args.append('%s=%s' % (k, urlquote(qv)))
-    return '&'.join(args)
-
-def _encode_json(obj):
-    '''
-    Encode object as json str.
-    '''
-    def _dump_obj(obj):
-        if isinstance(obj, dict):
-            return obj
-        d = dict()
-        for k in dir(obj):
-            if not k.startswith('_'):
-                d[k] = getattr(obj, k)
-        return d
-    return json.dumps(obj, default=_dump_obj)
-
-def _parse_json(jsonstr):
-    def _obj_hook(pairs):
-        o = JsonObject()
-        for k, v in pairs.items():
-            o[str(k)] = v
-        return o
-    return json.loads(jsonstr, object_hook=_obj_hook)
-
-class ApiError(Exception):
-
-    def __init__(self, url, request, response):
-        super(ApiError, self).__init__(url)
-        self.request = request
-        self.response = response
-
-class ApiAuthError(ApiError):
-
-    def __init__(self, msg):
-        super(ApiAuthError, self).__init__(msg, None, None)
-
-class ApiNotFoundError(ApiError):
-    pass
 
 class JsonObject(dict):
     '''
@@ -301,6 +289,26 @@ class JsonObject(dict):
 
     def __setattr__(self, attr, value):
         self[attr] = value
+
+
+class ApiError(Exception):
+
+    def __init__(self, url, request, response):
+        super(ApiError, self).__init__(url)
+        self.request = request
+        self.response = response
+
+
+class ApiAuthError(ApiError):
+
+    def __init__(self, msg):
+        super(ApiAuthError, self).__init__(msg, None, None)
+
+
+class ApiNotFoundError(ApiError):
+    pass
+
+
 
 if __name__ == '__main__':
     import doctest
