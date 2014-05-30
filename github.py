@@ -64,6 +64,7 @@ except:
 import re, os, time, hmac, base64, hashlib, urllib, mimetypes, json
 from collections import Iterable
 from datetime import datetime, timedelta, tzinfo
+from itertools import chain
 
 TIMEOUT=60
 
@@ -77,6 +78,8 @@ _METHOD_MAP = dict(
 
 DEFAULT_SCOPE = None
 RW_SCOPE = 'user,public_repo,repo,repo:status,gist'
+LINK_RE = re.compile("<([^>]+)>; rel=\"([^\"]+)\"")
+DEFAULT_LINKS = dict((rel+'_page',None) for rel in ['next','last','prev','first'])
 
 def _encode_params(kw):
     '''
@@ -231,14 +234,15 @@ class GitHub(object):
     def __getattr__(self, attr):
         return _Callable(self, '/%s' % attr)
 
-    def _http(self, method, path, **kw):
+    def _http(self, method, path, url=None, **kw):
         data = None
         params = None
         if method=='GET' and kw:
             path = '%s?%s' % (path, _encode_params(kw))
         if method in ['POST', 'PATCH', 'PUT']:
             data = bytes(_encode_json(kw), 'utf-8')
-        url = '%s%s' % (_URL, path)
+        if not url:
+            url = '%s%s' % (_URL, path)
         opener = build_opener(HTTPSHandler)
         request = Request(url, data=data)
         request.get_method = _METHOD_MAP[method]
@@ -248,11 +252,15 @@ class GitHub(object):
             request.add_header('Content-Type', 'application/x-www-form-urlencoded')
         try:
             response = opener.open(request, timeout=TIMEOUT)
-            is_json = self._process_resp(response.headers)
+            is_json, links = self._process_resp(response.headers)
             if is_json:
-                return _parse_json(response.read().decode('utf-8'))
+                r = _parse_json(response.read().decode('utf-8'))
+                if r.__class__.__name__ == 'list':
+                    r = ListObject(r,_gh=self,**links)
+                return r
         except HTTPError as e:
-            is_json = self._process_resp(e.headers)
+            is_json, _ = self._process_resp(e.headers)
+            json = None
             if is_json:
                 json = _parse_json(e.read().decode('utf-8'))
             req = JsonObject(method=method, url=url)
@@ -263,6 +271,7 @@ class GitHub(object):
 
     def _process_resp(self, headers):
         is_json = False
+        links = DEFAULT_LINKS.copy()
         if headers:
             for k in headers:
                 h = k.lower()
@@ -274,7 +283,11 @@ class GitHub(object):
                     self.x_ratelimit_reset = int(headers[k])
                 elif h=='content-type':
                     is_json = headers[k].startswith('application/json')
-        return is_json
+                elif h=='link':
+                    for link in headers[k].split(","):
+                        g = LINK_RE.match(headers[k]).groups()
+                        links[g[1]+'_page'] = g[0]
+        return (is_json,links)
 
 
 class JsonObject(dict):
@@ -290,6 +303,18 @@ class JsonObject(dict):
     def __setattr__(self, attr, value):
         self[attr] = value
 
+class ListObject(list):
+    def __init__(self,*args,**kwargs):
+        list.__init__(self,*args)
+        self.__dict__ = kwargs
+    def all(self):
+        return chain.from_iterable(self._all())
+    def _all(self):
+        cur = self
+        while not cur.next_page is None:
+            yield (o for o in cur)
+            cur = self._gh._http('GET', '', url=cur.next_page)
+        yield (o for o in cur)
 
 class ApiError(Exception):
 
