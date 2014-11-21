@@ -46,7 +46,7 @@ Traceback (most recent call last):
 ApiNotFoundError: https://api.github.com/users/github-not-exist-user/followers
 '''
 
-__version__ = '1.1.0'
+__version__ = '1.1.1'
 
 try:
     # Python 2
