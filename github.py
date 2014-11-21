@@ -252,6 +252,8 @@ class GitHub(object):
             is_json = self._process_resp(e.headers)
             if is_json:
                 json = _parse_json(e.read().decode('utf-8'))
+            else:
+                json = e.read().decode('utf-8')
             req = JsonObject(method=_method, url=url)
             resp = JsonObject(code=e.code, json=json)
             if resp.code==404:
