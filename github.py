@@ -114,13 +114,12 @@ def _parse_json(jsonstr):
         return o
     return json.loads(jsonstr, object_hook=_obj_hook)
 
-
 class _Executable(object):
 
-    def __init__(self, gh, method, path):
-        self._gh = gh
-        self._method = method
-        self._path = path
+    def __init__(self, _gh, _method, _path):
+        self._gh = _gh
+        self._method = _method
+        self._path = _path
 
     def __call__(self, **kw):
         return self._gh._http(self._method, self._path, **kw)
@@ -130,12 +129,11 @@ class _Executable(object):
 
     __repr__ = __str__
 
-
 class _Callable(object):
 
-    def __init__(self, gh, name):
-        self._gh = gh
-        self._name = name
+    def __init__(self, _gh, _name):
+        self._gh = _gh
+        self._name = _name
 
     def __call__(self, *args):
         if len(args)==0:
@@ -161,7 +159,6 @@ class _Callable(object):
         return '_Callable (%s)' % self._name
 
     __repr__ = __str__
-
 
 class GitHub(object):
 
@@ -231,20 +228,20 @@ class GitHub(object):
     def __getattr__(self, attr):
         return _Callable(self, '/%s' % attr)
 
-    def _http(self, method, path, **kw):
+    def _http(self, _method, _path, **kw):
         data = None
         params = None
-        if method=='GET' and kw:
-            path = '%s?%s' % (path, _encode_params(kw))
-        if method in ['POST', 'PATCH', 'PUT']:
+        if _method=='GET' and kw:
+            _path = '%s?%s' % (_path, _encode_params(kw))
+        if _method in ['POST', 'PATCH', 'PUT']:
             data = bytes(_encode_json(kw), 'utf-8')
-        url = '%s%s' % (_URL, path)
+        url = '%s%s' % (_URL, _path)
         opener = build_opener(HTTPSHandler)
         request = Request(url, data=data)
-        request.get_method = _METHOD_MAP[method]
+        request.get_method = _METHOD_MAP[_method]
         if self._authorization:
             request.add_header('Authorization', self._authorization)
-        if method in ['POST', 'PATCH', 'PUT']:
+        if _method in ['POST', 'PATCH', 'PUT']:
             request.add_header('Content-Type', 'application/x-www-form-urlencoded')
         try:
             response = opener.open(request, timeout=TIMEOUT)
@@ -255,7 +252,7 @@ class GitHub(object):
             is_json = self._process_resp(e.headers)
             if is_json:
                 json = _parse_json(e.read().decode('utf-8'))
-            req = JsonObject(method=method, url=url)
+            req = JsonObject(method=_method, url=url)
             resp = JsonObject(code=e.code, json=json)
             if resp.code==404:
                 raise ApiNotFoundError(url, req, resp)
@@ -276,7 +273,6 @@ class GitHub(object):
                     is_json = headers[k].startswith('application/json')
         return is_json
 
-
 class JsonObject(dict):
     '''
     general json object that can bind any fields but also act as a dict.
@@ -290,7 +286,6 @@ class JsonObject(dict):
     def __setattr__(self, attr, value):
         self[attr] = value
 
-
 class ApiError(Exception):
 
     def __init__(self, url, request, response):
@@ -298,17 +293,13 @@ class ApiError(Exception):
         self.request = request
         self.response = response
 
-
 class ApiAuthError(ApiError):
 
     def __init__(self, msg):
         super(ApiAuthError, self).__init__(msg, None, None)
 
-
 class ApiNotFoundError(ApiError):
     pass
-
-
 
 if __name__ == '__main__':
     import doctest
