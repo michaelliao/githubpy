@@ -228,7 +228,7 @@ class GitHub(object):
     def __getattr__(self, attr):
         return _Callable(self, '/%s' % attr)
 
-    def _http(self, _method, _path, **kw):
+    def _http(self, _method, _path, headers=None, **kw):
         data = None
         params = None
         if _method=='GET' and kw:
@@ -243,6 +243,9 @@ class GitHub(object):
             request.add_header('Authorization', self._authorization)
         if _method in ['POST', 'PATCH', 'PUT']:
             request.add_header('Content-Type', 'application/x-www-form-urlencoded')
+        if headers:
+            for k, v in headers.items():
+                request.add_header(k, v)
         try:
             response = opener.open(request, timeout=TIMEOUT)
             is_json = self._process_resp(response.headers)
