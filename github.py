@@ -62,7 +62,7 @@ except:
     from io import StringIO
 
 import re, os, time, hmac, base64, hashlib, urllib, mimetypes, json
-from collections import Iterable
+from collections.abc import Iterable
 from datetime import datetime, timedelta, tzinfo
 
 TIMEOUT=60
