@@ -39,6 +39,8 @@ rate limit remaining: ...
 'New issue test'
 >>> r.state
 'open'
+>>> gh.repos('michaelliao')('githubpy').contents('/test/test.c').get() # doctest: +ELLIPSIS
+{...}
 >>> gh.repos.thisisabadurl.get()
 Traceback (most recent call last):
     ...
