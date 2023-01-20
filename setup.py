@@ -6,8 +6,8 @@ import github
 kw = dict(
     name = 'githubpy',
     version = github.__version__,
-    description = 'Github v3 API Python SDK',
-    long_description = open('README', 'r').read(),
+    description = 'Github REST API Python SDK',
+    long_description = open('README.md', 'r').read(),
     author = 'Michael Liao',
     author_email = 'askxuefeng@gmail.com',
     url = 'https://github.com/michaelliao/githubpy',

@@ -3,64 +3,60 @@ githubpy
 
 ### Welcome
 
-githubpy is a simple Python SDK for GitHub's API v3. It's all contained in one easy-to-use file.
-
-It runs on Python 2 (2.6 and above) and Python 3 (3.3 and above).
+githubpy is a simple Python3 SDK for GitHub's REST API. It's all contained in one easy-to-use file.
 
 Sample code:
 
 ```
->>> gh = GitHub()
+>>> from github import GitHub
+>>> gh = GitHub(token='your-github-token')
 >>> gh.users('michaelliao').get()
-{'public_repos': 11, 'name': u'Michael Liao', ... }
+{'id': 470058, 'name': 'Michael Liao', ... }
 ```
 
 Requirement:
 
-Python 2.6, 2.7, 3.3, 3.4
+Python 3.x
 
+Python 2 is not supported.
 
 ### Call APIs
 
-All APIs are dynamic calls. You can construct an API call by GitHub's API doc.
+All APIs are dynamic calls. You can construct an API call by GitHub's [REST API](https://docs.github.com/en/rest).
 
-For example, according to GitHub API doc of how to [get a single user](http://developer.github.com/v3/users/#get-a-single-user):
+For example, according to GitHub API doc of how to [get a user](https://docs.github.com/en/rest/users/users#get-a-user):
 
 ```
-GET /users/:user
+GET /users/{username}
 ```
 
-Note the `:user` variable. You can make a call in Python like this:
+Note the `{username}` variable. You can make a call in Python like this:
 
 ```
 >>> gh.users('michaelliao').get()
-{'public_repos': 11, 'name': u'Michael Liao', ...}
+{'id': 470058, 'name': 'Michael Liao', ... }
 ```
 
 This returns a dict, but it can also be treated like an object:
 
 ```
 >>> u['name']
-u'Michael Liao'
+'Michael Liao'
 >>> u.name
-u'Michael Liao'
+'Michael Liao'
 ```
 
-Another example of how to [list issues for a repository](http://developer.github.com/v3/issues/#list-issues-for-a-repository):
+Another example of how to [list repository issues](https://docs.github.com/en/rest/issues/issues#list-repository-issues):
 
 ```
-GET /repos/:owner/:repo/issues
-Parameters
-  milestone
-    Integer Milestone number
-    none for Issues with no Milestone.
-    * for Issues with any Milestone.
-  state
-    open, closed, default: open
-  assignee
-    String User login
-    none for Issues with no assigned User.
-    * for Issues with any assigned User.
+GET /repos/{owner}/{repo}/issues
+Query parameters:
+  state: open, closed, all
+  assignee: username or *
+  sort: created, updated, comments
+  direction: asc, desc
+  page: 1, 2, 3, ...
+  per_page: 30
   ...
 ```
 
@@ -71,32 +67,29 @@ Python keywords can filter for `open` issues assigned to `michaelliao`:
       .get(state='open', assignee='michaelliao')
 ```
 
-
 ### Using POST, PUT, PATCH, and DELETE
 
-[Create an issue](http://developer.github.com/v3/issues/#create-an-issue):
+[Create an issue](https://docs.github.com/en/rest/issues/issues#create-an-issue):
 
 ```
-POST /repos/:owner/:repo/issues
-Input
-  title
-    Required string
-  body
-    Optional string
-  assignee
-    Optional string - Login for the user that this issue should be assigned to.
-  ...
+POST /repos/{owner}/{repo}/issues
+Body json:
+{
+  "title": "Found a bug",
+  "body": "Having a problem with this.",
+  "assignees": ["michaelliao"]
+}
 ```
 
 Python code to create an issue:
 
 ```
+>>> issue = dict(title='Found a bug', body='Having a problem with this.', assignees=["michaelliao"])
 >>> gh.repos('michaelliao')('githubpy').issues \
-      .post(title='sample issue', body='found a bug')
+      .post(issue)
 ```
 
-Remember, all APIs are dynamic calls...so you won't need update this SDK if GitHub add new APIs!
-
+Remember, all APIs are dynamic calls, so you won't need update this SDK if GitHub add new APIs!
 
 ### Authentication
 
@@ -106,10 +99,10 @@ Anonymous API call:
 >>> gh = GitHub()
 ```
 
-Basic authentication using username and password:
+Authentication with GitHub token:
 
 ```
->>> gh = GitHub(username='«loginname»', password='«your-password»')
+>>> gh = GitHub(token='ghp_...')
 ```
 
 OAuth authentication is a bit complicated:
@@ -134,7 +127,7 @@ OAuth authentication is a bit complicated:
 **Step 3:** Using access token as authentication to call APIs:
 
 ```
->>> gh = GitHub(access_token='abc1234567xyz')
+>>> gh = GitHub(token='abc1234567xyz')
 ```
 
 
@@ -172,7 +165,6 @@ You can check rate limits after any API call:
 
 ### Licensing
 
-githubpy is distributed under [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt). See LICENSE file.
-
+githubpy is distributed under [GPLv3](LICENSE).
 
 ### Enjoy!
