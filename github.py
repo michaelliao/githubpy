@@ -90,13 +90,13 @@ def _encode_params(kw):
     '''
     Encode parameters.
 
-    >>> kw = { 'a': 'K&R', 'lang': 'Ελληνικά,Français,中文,日本語' }
+    >>> kw = { 'a': 'K&R', 'lang': 'Ελληνικά,Français,中文,日本語', 'page': 1 }
     >>> _encode_params(kw)
-    'a=K%26R&lang=%CE%95%CE%BB%CE%BB%CE%B7%CE%BD%CE%B9%CE%BA%CE%AC%2CFran%C3%A7ais%2C%E4%B8%AD%E6%96%87%2C%E6%97%A5%E6%9C%AC%E8%AA%9E'
+    'a=K%26R&lang=%CE%95%CE%BB%CE%BB%CE%B7%CE%BD%CE%B9%CE%BA%CE%AC%2CFran%C3%A7ais%2C%E4%B8%AD%E6%96%87%2C%E6%97%A5%E6%9C%AC%E8%AA%9E&page=1'
     '''
     args = []
     for k, v in kw.items():
-        q = quote(v, encoding='utf-8')
+        q = quote(str(v), encoding='utf-8')
         args.append(f'{k}={q}')
     return '&'.join(args)
 
