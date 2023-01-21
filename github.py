@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*-coding: utf8 -*-
 
 '''
@@ -264,7 +264,7 @@ class GitHub(object):
         params = None
         if _method=='GET' and kw:
             _path = '%s?%s' % (_path, _encode_params(kw))
-        if _method in ['POST', 'PATCH', 'PUT']:
+        if _method in ['POST', 'PATCH', 'PUT', 'DELETE']:
             data = bytes(_encode_json(_data), 'utf-8')
         url = f'{_URL}{_path}'
         headers = {
@@ -299,11 +299,9 @@ class GitHub(object):
                 json = _parse_json(e.read().decode('utf-8'))
             else:
                 json = e.read().decode('utf-8')
-            req = JsonObject(method=_method, url=url)
-            resp = JsonObject(code=e.code, json=json)
-            if resp.code==404:
-                raise ApiNotFoundError(url, req, resp)
-            raise ApiError(url, req, resp)
+            if e.code == 404:
+                raise ApiNotFoundError(url)
+            raise ApiError(e.code, url)
 
     def _process_resp(self, headers):
         is_json = False
@@ -335,18 +333,20 @@ class JsonObject(dict):
 
 class ApiError(Exception):
 
-    def __init__(self, url, request, response):
+    def __init__(self, code, url):
         super(ApiError, self).__init__(url)
-        self.request = request
-        self.response = response
+        self.code = code
 
 class ApiAuthError(ApiError):
 
-    def __init__(self, msg):
-        super(ApiAuthError, self).__init__(msg, None, None)
+    def __init__(self, code, url):
+        super(ApiAuthError, self).__init__(code, url)
 
 class ApiNotFoundError(ApiError):
-    pass
+
+    def __init__(self, url):
+        super(ApiNotFoundError, self).__init__(404, url)
+
 
 if __name__ == '__main__':
     import doctest
