@@ -9,8 +9,8 @@ Export token first before run this script:
 $ export GITHUB_TOKEN=ghp_xxx
 '''
 
-import os, json, time, base64, datetime
-from github import GitHub, ApiNotFoundError
+import os, json, time, datetime
+from github import GitHub
 
 def main():
     # read token from env:
