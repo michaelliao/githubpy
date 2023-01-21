@@ -76,14 +76,6 @@ def sleep():
     time.sleep(1.5)
 
 
-def get_sha(obj):
-    if hasattr(obj, 'sha'):
-        return obj.sha
-    if hasattr(obj, 'content'):
-        return obj.content.sha
-    raise ValueError('object has no attribute of \'sha\'')
-
-
 def now():
     return datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
 
