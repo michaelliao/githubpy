@@ -39,8 +39,16 @@ rate limit remaining: ...
 'New issue test'
 >>> r.state
 'open'
->>> gh.repos('michaelliao')('githubpy').contents('/test/test.c').get() # doctest: +ELLIPSIS
+>>> exist = gh.repos('michaelliao')('githubpy').contents('test/café.txt').get() # doctest: +ELLIPSIS
 {...}
+>>> # update exist file:
+>>> import base64, datetime
+>>> dt = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+>>> file_content = bytes('Hello world! ' + dt, 'utf-8')
+>>> update = { 'message': 'Update file at ' + dt, 'committer': { 'name': 'Michael', 'email': 'askxuefeng@gmail.com' }, 'content': base64.b64encode(file_content).decode('utf-8'), 'sha': exist.sha }
+>>> commit = gh.repos('michaelliao')('githubpy').contents('test/café.txt').put(update)
+>>> commit.content.url
+'https://api.github.com/repos/michaelliao/githubpy/contents/test/caf%C3%A9.txt?ref=master'
 >>> gh.repos.thisisabadurl.get()
 Traceback (most recent call last):
     ...
