@@ -242,18 +242,19 @@ class GitHub(object):
             kw['redirect_uri'] = redirect_uri
         if state:
             kw['state'] = state
+        url = 'https://github.com/login/oauth/access_token'
         opener = build_opener(HTTPSHandler)
-        request = Request('https://github.com/login/oauth/access_token', data=_encode_params(kw))
+        request = Request(url, data=_encode_params(kw))
         request.get_method = _METHOD_MAP['POST']
         request.add_header('Accept', 'application/json')
         try:
             response = opener.open(request, timeout=TIMEOUT)
             r = _parse_json(response.read())
             if 'error' in r:
-                raise ApiAuthError(r.error)
+                raise ApiAuthError(400, url, r.error)
             return AccessToken(r.access_token, r.scope, r.token_type)
         except HTTPError as e:
-            raise ApiAuthError('HTTPError when get access token')
+            raise ApiAuthError(e.code, url, 'HTTPError when get access token')
 
     def __getattr__(self, attr):
         path = _encode_path(attr)
@@ -301,6 +302,10 @@ class GitHub(object):
                 json = e.read().decode('utf-8')
             if e.code == 404:
                 raise ApiNotFoundError(url)
+            if e.code == 403:
+                raise ApiForbiddenError(url)
+            if e.code == 409:
+                raise ApiConflictError(url)
             raise ApiError(e.code, url)
 
     def _process_resp(self, headers):
@@ -318,6 +323,7 @@ class GitHub(object):
                     is_json = headers[h].startswith('application/json')
         return is_json
 
+
 class JsonObject(dict):
     '''
     general json object that can bind any fields but also act as a dict.
@@ -331,21 +337,40 @@ class JsonObject(dict):
     def __setattr__(self, attr, value):
         self[attr] = value
 
+
 class ApiError(Exception):
 
-    def __init__(self, code, url):
-        super(ApiError, self).__init__(url)
+    def __init__(self, code, url, message=None):
+        super(ApiError, self).__init__(message if message else f'{code}: {url}')
         self.code = code
+        self.url = url
+
 
 class ApiAuthError(ApiError):
 
-    def __init__(self, code, url):
-        super(ApiAuthError, self).__init__(code, url)
+    def __init__(self, code, url, message=None):
+        super(ApiAuthError, self).__init__(code, url, message)
+
+
+class ApiForbiddenError(ApiError):
+    ' 403 Error '
+
+    def __init__(self, url):
+        super(ApiForbiddenError, self).__init__(403, url)
+
 
 class ApiNotFoundError(ApiError):
+    ' 404 Error '
 
     def __init__(self, url):
         super(ApiNotFoundError, self).__init__(404, url)
+
+
+class ApiConflictError(ApiError):
+    ' 409 Error '
+
+    def __init__(self, url):
+        super(ApiConflictError, self).__init__(409, url)
 
 
 if __name__ == '__main__':
