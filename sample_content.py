@@ -61,6 +61,18 @@ def main():
     )
     print_json(f'deleted file: {path}', deleted)
 
+    # try upload without permission: https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+    try:
+        gh.repos('torvalds')('linux').contents('test-upload-without-permission.txt').put(
+            {
+                'message': 'upload new file',
+                'committer': committer(),
+                'content': file_content()
+            }
+        )
+    except ApiNotFoundError as e:
+        print('No permission.')
+
 
 def print_json(msg, obj):
     print(f'{msg}')
