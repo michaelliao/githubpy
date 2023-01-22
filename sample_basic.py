@@ -10,7 +10,7 @@ $ export GITHUB_TOKEN=ghp_xxx
 '''
 
 import os, json, time, datetime
-from github import GitHub
+from github import GitHub, ApiNotFoundError
 
 def main():
     # read token from env:
@@ -29,7 +29,7 @@ def main():
     sleep()
 
     # get repositories for a user: https://docs.github.com/rest/repos/repos#list-repositories-for-a-user
-    repos = gh.users(user).repos.get(sort='updated', page=1, per_page=10)
+    repos = gh.users(user).repos.get(sort='updated', page=1, per_page=6)
     print_json('repos:', repos)
 
     for rp in repos:
@@ -46,6 +46,16 @@ def main():
                 }
             )
             print_json('updated repo:', updated)
+
+    # update a repository without permission: https://docs.github.com/rest/repos/repos#update-a-repository
+    try:
+        gh.repos('torvalds')('linux').patch(
+            {
+                'description': 'Update Linux kernel source tree'
+            }
+        )
+    except ApiNotFoundError as e:
+        print(e.code, e.url)
 
 
 def print_json(msg, obj):
