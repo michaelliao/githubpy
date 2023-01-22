@@ -10,7 +10,7 @@ $ export GITHUB_TOKEN=ghp_xxx
 '''
 
 import os, json, time, base64, datetime
-from github import GitHub, ApiNotFoundError
+from github import GitHub, ApiConflictError, ApiNotFoundError
 
 def main():
     # read token from env:
@@ -37,6 +37,20 @@ def main():
             }
         )
         print_json(f'created file: {path}', exist)
+
+    sleep()
+    try:
+        # update exist file with conflict, because sha is invalid: https://docs.github.com/rest/repos/contents#create-or-update-file-contents
+        gh.repos(user)(repo).contents(path).put(
+            {
+                'message': 'update file',
+                'committer': committer(),
+                'content': file_content(),
+                'sha': '1000000000200000000030000000004000000000' # invalid sha
+            }
+        )
+    except ApiConflictError as e:
+        print(e.code, e.url, 'Conflict error.')
 
     sleep()
     # update exist file: https://docs.github.com/rest/repos/contents#create-or-update-file-contents
@@ -71,7 +85,7 @@ def main():
             }
         )
     except ApiNotFoundError as e:
-        print('No permission.')
+        print(e.code, e.url, 'No permission.')
 
 
 def print_json(msg, obj):
