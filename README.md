@@ -3,7 +3,7 @@ githubpy
 
 ### Welcome
 
-githubpy is a simple Python3 SDK for GitHub's REST API. It's all contained in one easy-to-use file.
+githubpy is a simple Python3 client for GitHub's REST API. It's all contained in one easy-to-use file.
 
 Sample code:
 
@@ -105,6 +105,8 @@ Authentication with GitHub token:
 >>> gh = GitHub(token='ghp_...')
 ```
 
+Personal token can be generated from `Settings` - `Developer settings` - `Personal access tokens`.
+
 OAuth authentication is a bit complicated:
 
 **Step 1:** Redirect user to the generated URL:
@@ -120,8 +122,9 @@ OAuth authentication is a bit complicated:
 ```
 >>> code = request.input('code')
 >>> state = request.input('state')
->>> print gh.get_access_token(code, state)
-'abc1234567xyz'
+>>> t = gh.get_access_token(code, state)
+>>> print(t.token_type, t.scope, t.access_token)
+'bearer', 'repo, user', 'abc1234567xyz'
 ```
 
 **Step 3:** Using access token as authentication to call APIs:
@@ -134,20 +137,25 @@ OAuth authentication is a bit complicated:
 ### Errors
 
 An `ApiError` is raised if something wrong. 
-There are 2 sub-classes: `ApiAuthError` and `ApiNotFoundError`.
+There are sub-classes of `ApiError`:
+
+- `ApiAuthError`: OAuth failed.
+- `ApiForbiddenError`: 403 response.
+- `ApiNotFoundError`: 404 response.
+- `ApiConflictError`: 409 response.
 
 ```
 try:
     gh.user.emails.delete('email@example.com')
 except ApiNotFoundError as e:
-    print e, e.request, e.response
+    print(e.code, e.url, str(e))
 ```
 
 NOTE: You may get `ApiNotFoundError` (404 Not Found) even if the URL is correct, but authentication fails. According to GitHub's API docs:
 
-    Requests that require authentication will return 404, instead of 403, 
-    in some places. This is to prevent the accidental leakage of private 
-    repositories to unauthorized users.
+> Requests that require authentication will return 404, instead of 403, 
+> in some places. This is to prevent the accidental leakage of private 
+> repositories to unauthorized users.
 
 
 ### Rate Limiting
@@ -166,5 +174,12 @@ You can check rate limits after any API call:
 ### Licensing
 
 githubpy is distributed under [GPLv3](LICENSE).
+
+
+### Sample
+
+- Get user and repo info: [sample_basic.py](sample_basic.py)
+- Get, upload, update and delete content: [sample_content.py](sample_content.py)
+- Get, create and update issues: [sample_issue.py](sample_issue.py)
 
 ### Enjoy!
