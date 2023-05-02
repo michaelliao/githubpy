@@ -59,7 +59,7 @@ Traceback (most recent call last):
 ApiNotFoundError: https://api.github.com/users/github-not-exist-user/followers
 '''
 
-__version__ = '2.0'
+__version__ = '2.0.0'
 
 from urllib.request import build_opener, HTTPSHandler, HTTPError, Request
 from urllib.parse import quote
